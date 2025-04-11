@@ -534,7 +534,7 @@ pub_Control_Data twist;
 #else XBOX_CONTROL
 #include "xbox.h"
 Subscriber *ctrl_data_sub;
-pub_Xbox_Data xbox_data;
+pub_Xbox_Data xbox_data_;
 #endif
 
 #ifdef TRY_AUTO_CONTROL
@@ -770,10 +770,10 @@ __attribute((noreturn)) void Chassis_Task(void *argument){
 
     temp_data = ctrl_data_sub->getdata(ctrl_data_sub);
     if (temp_data.len != -1) {
-        xbox_data = *(pub_Xbox_Data *)temp_data.data;
-        User_Chassis.Control_Status = (Control_Status_e)xbox_data.btnB;
-        User_Chassis.Moving_Status = (Moving_Status_e)xbox_data.btnX;
-        if(Button_Switch(xbox_data.btnY,&xbox_data.btnY_last)){
+        xbox_data_ = *(pub_Xbox_Data *)temp_data.data;
+        User_Chassis.Control_Status = (Control_Status_e)xbox_data_.btnB;
+        User_Chassis.Moving_Status = (Moving_Status_e)xbox_data_.btnX;
+        if(Button_Switch(xbox_data_.btnY,&xbox_data_.btnY_last)){
             move_status++;
             if(move_status>3){
                 move_status = 0;
@@ -782,15 +782,15 @@ __attribute((noreturn)) void Chassis_Task(void *argument){
         User_Chassis.Chassis_Status = (Chassis_Status_e)move_status;
         switch (User_Chassis.Chassis_Status) {
         case ROBOT_CHASSIS: {
-            User_Chassis.Ref_RoboSpeed.linear_x = (xbox_data.joyLHori-32768) / 32768.0f * 2.7f;
-            User_Chassis.Ref_RoboSpeed.linear_y = (xbox_data.joyLVert-32768) / 32768.0f * 2.7f;
-            User_Chassis.Ref_RoboSpeed.omega = (xbox_data.joyRHori-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_RoboSpeed.linear_x = (xbox_data_.joyLHori-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_RoboSpeed.linear_y = (xbox_data_.joyLVert-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_RoboSpeed.omega = (xbox_data_.joyRHori-32768) / 32768.0f * 2.7f;
             break;
         }
         case WORLD_CHASSIS: {
-            User_Chassis.Ref_WorldSpeed.linear_x = (xbox_data.joyLHori-32768) / 32768.0f * 2.7f;
-            User_Chassis.Ref_WorldSpeed.linear_y = (xbox_data.joyLVert-32768) / 32768.0f * 2.7f;
-            User_Chassis.Ref_WorldSpeed.omega = (xbox_data.joyRHori-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_WorldSpeed.linear_x = (xbox_data_.joyLHori-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_WorldSpeed.linear_y = (xbox_data_.joyLVert-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_WorldSpeed.omega = (xbox_data_.joyRHori-32768) / 32768.0f * 2.7f;
             break;
         }
         default:
