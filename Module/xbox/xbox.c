@@ -118,6 +118,12 @@ uint8_t Xbox_Init(Uart_Instance_t *xbox_uart_instance) {
   XBOX_Instance->xbox_data.btnDirUp = 0;
   XBOX_Instance->xbox_data.btnDirDown = 0;
   XBOX_Instance->xbox_data.btnB = 0;
+  XBOX_Instance->xbox_data.btnX = 0;
+  XBOX_Instance->xbox_data.joyLHori = 0;
+  XBOX_Instance->xbox_data.joyLVert = 0;
+  XBOX_Instance->xbox_data.joyRHori = 0;
+  XBOX_Instance->xbox_data.joyRVert = 0;
+  XBOX_Instance->xbox_data.btnY_last = 0;
   
   return 1;
 }
@@ -246,6 +252,12 @@ void Xbox_Get_Data(uint8_t *xbox_datas, XBOX_Instance_t *Instance) {
   Instance->xbox_data.btnDirUp = Instance->xbox_msgs->btnDirUp;
   Instance->xbox_data.btnDirDown = Instance->xbox_msgs->btnDirDown; 
   Instance->xbox_data.btnB = Instance->xbox_msgs->btnB;
+  Instance->xbox_data.btnX = Instance->xbox_msgs->btnX;
+  Instance->xbox_data.joyLHori = Instance->xbox_msgs->joyLHori;
+  Instance->xbox_data.joyLVert = Instance->xbox_msgs->joyLVert;
+  Instance->xbox_data.joyRHori = Instance->xbox_msgs->joyRHori;
+  Instance->xbox_data.joyRVert = Instance->xbox_msgs->joyRVert;
+  Instance->xbox_data.btnY_last = Instance->xbox_msgs->btnY_last;
   //..........
 }
 

@@ -53,11 +53,17 @@ typedef struct {
   bool btnDirUp;
   bool btnDirDown;
   bool btnB;
+  bool btnY_last;
   // 这里填写你需要传输的Xbox按键摇杆等数据
   // bool btnY;
   // bool btnY_last;
   //......
-
+  bool btnX;
+  uint16_t joyLHori;
+  uint16_t joyLVert;
+  uint16_t joyRHori;
+  uint16_t joyRVert;
+  
 } pub_Xbox_Data;
 
 #pragma pack()

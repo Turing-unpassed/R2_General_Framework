@@ -531,6 +531,10 @@ pub_vofa_pid pid_data;
 /* 接收航模遥控控制信息 */
 Subscriber *ctrl_data_sub;
 pub_Control_Data twist;
+#else XBOX_CONTROL
+#include "xbox.h"
+Subscriber *ctrl_data_sub;
+pub_Xbox_Data xbox_data;
 #endif
 
 #ifdef TRY_AUTO_CONTROL
@@ -620,6 +624,8 @@ uint8_t Chassis_Init() {
 #ifdef USE_AIRJOY_CONTROL
   /* 遥控器 订阅者准备 */
   ctrl_data_sub = register_sub("ctrl_pub", 1);
+#else XBOX_CONTROL
+  ctrl_data_sub = register_sub("xbox", 1);
 #endif
 
 #ifdef TRY_AUTO_CONTROL
@@ -639,7 +645,7 @@ uint8_t Chassis_Init() {
  *
  *
  */
-__attribute((noreturn)) void Chassis_Task(void *argument) {
+__attribute((noreturn)) void Chassis_Task(void *argument){
   portTickType currentTime;
   currentTime = xTaskGetTickCount();
 
@@ -650,6 +656,7 @@ __attribute((noreturn)) void Chassis_Task(void *argument) {
   uint8_t _keep_x = 0;
   uint8_t _keep_y = 0;
   float _current_angle = 0;
+  uint8_t move_status = 0;
 #ifdef VOFA_TO_DEBUG
   publish_data temp_pid_data;
 #endif
@@ -758,6 +765,38 @@ __attribute((noreturn)) void Chassis_Task(void *argument) {
         break;
       }
     }
+#else XBOX_CONTROL
+    /* 接收xbox遥控数据 */
+
+    temp_data = ctrl_data_sub->getdata(ctrl_data_sub);
+    if (temp_data.len != -1) {
+        xbox_data = *(pub_Xbox_Data *)temp_data.data;
+        User_Chassis.Control_Status = (Control_Status_e)xbox_data.btnB;
+        User_Chassis.Moving_Status = (Moving_Status_e)xbox_data.btnX;
+        if(Button_Switch(xbox_data.btnY,&xbox_data.btnY_last)){
+            move_status++;
+            if(move_status>3){
+                move_status = 0;
+            }
+        }
+        User_Chassis.Chassis_Status = (Chassis_Status_e)move_status;
+        switch (User_Chassis.Chassis_Status) {
+        case ROBOT_CHASSIS: {
+            User_Chassis.Ref_RoboSpeed.linear_x = (xbox_data.joyLHori-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_RoboSpeed.linear_y = (xbox_data.joyLVert-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_RoboSpeed.omega = (xbox_data.joyRHori-32768) / 32768.0f * 2.7f;
+            break;
+        }
+        case WORLD_CHASSIS: {
+            User_Chassis.Ref_WorldSpeed.linear_x = (xbox_data.joyLHori-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_WorldSpeed.linear_y = (xbox_data.joyLVert-32768) / 32768.0f * 2.7f;
+            User_Chassis.Ref_WorldSpeed.omega = (xbox_data.joyRHori-32768) / 32768.0f * 2.7f;
+            break;
+        }
+        default:
+            break;
+        }
+    }
 #endif
     User_Chassis.Chassis_Parking_Control(); // 长时间未控制时自动进入驻车模式
     Chassis();
@@ -837,9 +876,9 @@ uint8_t Chassis() {
     User_Chassis.Dynamics_Inverse_Resolution();
 
 #else // 使用电机内环直驱
-    User_Chassis.ref_twist.linear_x = User_Chassis.Ref_RoboSpeed.linear_x;
-    User_Chassis.ref_twist.linear_y = User_Chassis.Ref_RoboSpeed.linear_y;
-    User_Chassis.ref_twist.omega = User_Chassis.Ref_RoboSpeed.omega;
+    User_Chassis.ref_twist.linear_x = User_Chassis.Ref_WorldSpeed.linear_x;
+    User_Chassis.ref_twist.linear_y = User_Chassis.Ref_WorldSpeed.linear_y;
+    User_Chassis.ref_twist.omega = User_Chassis.Ref_WorldSpeed.omega;
 #endif
     /* 电机输出赋值 */
     for (size_t i = 0; i < User_Chassis.Wheel_Num; i++) {
